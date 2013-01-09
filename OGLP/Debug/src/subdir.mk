@@ -4,13 +4,22 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
-../src/OGLP.cpp 
+../src/ModelObject.cpp \
+../src/main.cpp \
+../src/paserOBJ.cpp \
+../src/shadowmap.cpp 
 
 OBJS += \
-./src/OGLP.o 
+./src/ModelObject.o \
+./src/main.o \
+./src/paserOBJ.o \
+./src/shadowmap.o 
 
 CPP_DEPS += \
-./src/OGLP.d 
+./src/ModelObject.d \
+./src/main.d \
+./src/paserOBJ.d \
+./src/shadowmap.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <glm/glm.hpp>
 #include <GL/glu.h>
+#include <GL/gl.h>
 #include <IL/il.h>
 #include <IL/ilu.h>
 #include <IL/ilut.h>
