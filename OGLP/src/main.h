@@ -7,7 +7,7 @@
 //	Copyright (c) 2006, Paul Baker
 //	Distributed under the New BSD Licence. (See accompanying file License.txt or copy at
 //	http://www.paulsprojects.net/NewBSDLicense.txt)
-//////////////////////////////////////////////////////////////////////////////////////////	
+//////////////////////////////////////////////////////////////////////////////////////////
 
 #ifndef MAIN_H
 #define MAIN_H
@@ -16,7 +16,7 @@
 bool Init(void);
 
 //Called to draw scene
-void Display(void);
+void display(void);
 
 //Called on window resize
 void Reshape(int w, int h);

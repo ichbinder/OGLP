@@ -1,36 +1,37 @@
-//////////////////////////////////////////////////////////////////////////////////////////
-//	Shadow Mapping Tutorial
-//	Accompanies a tutorial found on my site
-//	Downloaded from: www.paulsprojects.net
-//	Created:	16th September 2003
-//
-//	Copyright (c) 2006, Paul Baker
-//	Distributed under the New BSD Licence. (See accompanying file License.txt or copy at
-//	http://www.paulsprojects.net/NewBSDLicense.txt)
-//////////////////////////////////////////////////////////////////////////////////////////	
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include <glm/glm.hpp>
+#include <vector>
+
+#include <GL/gl.h>
+#include <GL/glu.h>
+#include <GL/glut.h>
 #include <stdio.h>
 #include "GLee/GLee.h"	//GL header file, including extensions
-#include <GL/glut.h>
 #include "Maths/Maths.h"
-#include "TIMER.h"
-#include "FPS_COUNTER.h"
-#include "scene.h"
 #include "main.h"
+#include "ModelObject.h"
 
-//Timer used for frame rate independent movement
-TIMER timer;
+std::vector<ModelObject> mashe_VectorList;
 
-//Frames per second counter
-FPS_COUNTER fpsCounter;
+float rotateThing = 0;
+
+float cameraRotateY = 0;
+float cameraRotateX = 0;
+
+int mausX = 0;
+int mausY = 0;
+
+float fPi180 = 0.0174532925f;
+
+bool keys[256];
+
+GLfloat rotateRobotfirstY = 0.0;
 
 //Camera & light positions
-VECTOR3D cameraPosition(-2.5f, 3.5f,-2.5f);
-VECTOR3D lightPosition(2.0f, 3.0f,-2.0f);
+VECTOR3D cameraPosition(-2.5f, 3.5f, -2.5f);
+VECTOR3D lightPosition(2.0f, 3.0f, -2.0f);
 
 //Size of shadow map
-const int shadowMapSize=512;
+const int shadowMapSize = 512;
 
 //Textures
 GLuint shadowMapTexture;
@@ -42,16 +43,40 @@ int windowWidth, windowHeight;
 MATRIX4X4 lightProjectionMatrix, lightViewMatrix;
 MATRIX4X4 cameraProjectionMatrix, cameraViewMatrix;
 
+void idle(void) {
+	if (keys['w']) {
+		cameraPosition.z -= cos(cameraRotateY * fPi180) * 0.06;
+		cameraPosition.x -= sin(cameraRotateY * fPi180) * 0.06;
+		glutPostRedisplay();
+	}
+	if (keys['s']) {
+		cameraPosition.z += cos(cameraRotateY * fPi180) * 0.06;
+		cameraPosition.x += sin(cameraRotateY * fPi180) * 0.06;
+		glutPostRedisplay();
+	}
+	if (keys['a']) {
+		cameraPosition.x -= cos(cameraRotateY * fPi180) * 0.06;
+		cameraPosition.z += sin(cameraRotateY * fPi180) * 0.06;
+		glutPostRedisplay();
+	}
+	if (keys['d']) {
+		cameraPosition.x += cos(cameraRotateY * fPi180) * 0.06;
+		cameraPosition.z -= sin(cameraRotateY * fPi180) * 0.06;
+		glutPostRedisplay();
+	}
+	if (rotateThing > 359)
+		rotateThing = 0.0f;
+	rotateThing += 0.2f;
+}
+
 //Called for initiation
-bool Init(void)
-{
+bool Init(void) {
 	//Check for necessary extensions
-	if(!GLEE_ARB_depth_texture || !GLEE_ARB_shadow)
-	{
+	if (!GLEE_ARB_depth_texture || !GLEE_ARB_shadow) {
 		printf("I require ARB_depth_texture and ARB_shadow extensionsn\n");
 		return false;
 	}
-	
+
 	//Load identity modelview
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -75,8 +100,8 @@ bool Init(void)
 	//Create the shadow map texture
 	glGenTextures(1, &shadowMapTexture);
 	glBindTexture(GL_TEXTURE_2D, shadowMapTexture);
-	glTexImage2D(	GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadowMapSize, shadowMapSize, 0,
-					GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadowMapSize,
+			shadowMapSize, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -85,58 +110,98 @@ bool Init(void)
 	//Use the color as the ambient and diffuse material
 	glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
 	glEnable(GL_COLOR_MATERIAL);
-	
+
 	//White specular material color, shininess 16
-	glMaterialfv(GL_FRONT, GL_SPECULAR, white);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, (GLfloat*) &white);
 	glMaterialf(GL_FRONT, GL_SHININESS, 16.0f);
 
 	//Calculate & save matrices
 	glPushMatrix();
-	
+
 	glLoadIdentity();
-	gluPerspective(45.0f, (float)windowWidth/windowHeight, 1.0f, 100.0f);
+	gluPerspective(45.0f, (float) windowWidth / windowHeight, 1.0f, 100.0f);
 	glGetFloatv(GL_MODELVIEW_MATRIX, cameraProjectionMatrix);
-	
+
 	glLoadIdentity();
-	gluLookAt(cameraPosition.x, cameraPosition.y, cameraPosition.z,
-				0.0f, 0.0f, 0.0f,
-				0.0f, 1.0f, 0.0f);
+	gluLookAt(cameraPosition.x, cameraPosition.y, cameraPosition.z, 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f, 0.0f);
 	glGetFloatv(GL_MODELVIEW_MATRIX, cameraViewMatrix);
-	
+
 	glLoadIdentity();
 	gluPerspective(45.0f, 1.0f, 2.0f, 8.0f);
 	glGetFloatv(GL_MODELVIEW_MATRIX, lightProjectionMatrix);
-	
-	glLoadIdentity();
-	gluLookAt(	lightPosition.x, lightPosition.y, lightPosition.z,
-				0.0f, 0.0f, 0.0f,
-				0.0f, 1.0f, 0.0f);
-	glGetFloatv(GL_MODELVIEW_MATRIX, lightViewMatrix);
-	
-	glPopMatrix();
 
-	//Reset timer
-	timer.Reset();
+	glLoadIdentity();
+	gluLookAt(lightPosition.x, lightPosition.y, lightPosition.z, 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f, 0.0f);
+	glGetFloatv(GL_MODELVIEW_MATRIX, lightViewMatrix);
+
+	glPopMatrix();
 
 	return true;
 }
 
-//Called to draw scene
-void Display(void)
+void matrices_calc() {
+	//Calculate & save matrices
+	glPushMatrix();
+
+	glLoadIdentity();
+	gluPerspective(45.0f, (float) windowWidth / windowHeight, 1.0f, 100.0f);
+	glGetFloatv(GL_MODELVIEW_MATRIX, cameraProjectionMatrix);
+
+	glLoadIdentity();
+	gluLookAt(cameraPosition.x, cameraPosition.y, cameraPosition.z,
+				0.0f, 0.0f,	0.0f,
+				0.0f, 1.0f, 0.0f);
+	glGetFloatv(GL_MODELVIEW_MATRIX, cameraViewMatrix);
+
+	glLoadIdentity();
+	gluPerspective(45.0f, 1.0f, 2.0f, 8.0f);
+	glGetFloatv(GL_MODELVIEW_MATRIX, lightProjectionMatrix);
+
+	glLoadIdentity();
+	gluLookAt(lightPosition.x, lightPosition.y, lightPosition.z, 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f, 0.0f);
+	glGetFloatv(GL_MODELVIEW_MATRIX, lightViewMatrix);
+
+	glPopMatrix();
+}
+
+void DrawScene(void)
 {
-	//angle of spheres in scene. Calculate from time
-	float angle=timer.GetTime()/10;	
+    glPushMatrix();
+        glTranslatef(10.0, -0.5, 10.0);
+        for (int i = 0; i <= mashe_VectorList.size() - 1; i++) {
+            mashe_VectorList[i].DrawModel();
+        }
+    glPopMatrix();
 
+    glBegin(GL_QUADS);
+    glColor3f(1.0, 0.4, 0.4);
+    glVertex3f(-100.0f, -1.0f, -100.0f);
+    glVertex3f(-100.0f, -1.0f, 100.0f);
+    glVertex3f(100.0f, -1.0f, 100.0f);
+    glVertex3f(100.0f, -1.0f, -100.0f);
+    glEnd();
+}
 
+//Called to draw scene
+void display(void) {
+	glutWarpPointer(mausX, mausY); // setze die Maus in die mitte des Glutfensters
+
+	//	//angle of spheres in scene. Calculate from time
+	//float angle = 5; //timer.GetTime()/10;
 
 	//First pass - from light's point of view
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
+
+//		glRotatef(rotateRobotfirstY, 0.0, 1.0, 0.0);
+
 	glMatrixMode(GL_PROJECTION);
-	glLoadMatrixf(lightProjectionMatrix);
+	glLoadMatrixf((const float*) &lightProjectionMatrix);
 
 	glMatrixMode(GL_MODELVIEW);
-	glLoadMatrixf(lightViewMatrix);
+	glLoadMatrixf((const float*) &lightViewMatrix);
 
 	//Use viewport the same size as the shadow map
 	glViewport(0, 0, shadowMapSize, shadowMapSize);
@@ -147,74 +212,73 @@ void Display(void)
 	//Disable color writes, and use flat shading for speed
 	glShadeModel(GL_FLAT);
 	glColorMask(0, 0, 0, 0);
-	
+
 	//Draw the scene
-	DrawScene(angle);
+	DrawScene();
 
 	//Read the depth buffer into the shadow map texture
 	glBindTexture(GL_TEXTURE_2D, shadowMapTexture);
-	glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, shadowMapSize, shadowMapSize);
+	glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, shadowMapSize,
+			shadowMapSize);
 
 	//restore states
 	glCullFace(GL_BACK);
 	glShadeModel(GL_SMOOTH);
 	glColorMask(1, 1, 1, 1);
-	
-
-	
 
 	//2nd pass - Draw from camera's point of view
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 	glMatrixMode(GL_PROJECTION);
-	glLoadMatrixf(cameraProjectionMatrix);
-	
+	glLoadMatrixf((const float*) &cameraProjectionMatrix);
+
 	glMatrixMode(GL_MODELVIEW);
-	glLoadMatrixf(cameraViewMatrix);
+	glLoadMatrixf((const float*) &cameraViewMatrix);
 
 	glViewport(0, 0, windowWidth, windowHeight);
 
+//		glRotatef(rotateRobotfirstY, 0.0, 1.0, 0.0);
+
 	//Use dim light to represent shadowed areas
-	glLightfv(GL_LIGHT1, GL_POSITION, VECTOR4D(lightPosition));
-	glLightfv(GL_LIGHT1, GL_AMBIENT, white*0.2f);
-	glLightfv(GL_LIGHT1, GL_DIFFUSE, white*0.2f);
-	glLightfv(GL_LIGHT1, GL_SPECULAR, black);
+	glLightfv(GL_LIGHT1, GL_POSITION, (float*) &VECTOR4D(lightPosition));
+	glLightfv(GL_LIGHT1, GL_AMBIENT, (float*) &(white * 0.2f));
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, (float*) &(white * 0.2f));
+	glLightfv(GL_LIGHT1, GL_SPECULAR, (float*) &black);
 	glEnable(GL_LIGHT1);
 	glEnable(GL_LIGHTING);
 
-	DrawScene(angle);
-	
+	DrawScene();
 
+//		glRotatef(rotateRobotfirstY, 0.0, 1.0, 0.0);
 
 	//3rd pass
 	//Draw with bright light
-	glLightfv(GL_LIGHT1, GL_DIFFUSE, white);
-	glLightfv(GL_LIGHT1, GL_SPECULAR, white);
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, (GLfloat*) &white);
+	glLightfv(GL_LIGHT1, GL_SPECULAR, (GLfloat*) &white);
 
 	//Calculate texture matrix for projection
 	//This matrix takes us from eye space to the light's clip space
 	//It is postmultiplied by the inverse of the current view matrix when specifying texgen
-	static MATRIX4X4 biasMatrix(0.5f, 0.0f, 0.0f, 0.0f,
-								0.0f, 0.5f, 0.0f, 0.0f,
-								0.0f, 0.0f, 0.5f, 0.0f,
-								0.5f, 0.5f, 0.5f, 1.0f);	//bias from [-1, 1] to [0, 1]
-	MATRIX4X4 textureMatrix=biasMatrix*lightProjectionMatrix*lightViewMatrix;
+	static MATRIX4X4 biasMatrix(0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.5f, 0.0f, 0.5f, 0.5f, 0.5f, 1.0f);//bias from [-1, 1] to [0, 1]
+	MATRIX4X4 textureMatrix = biasMatrix * lightProjectionMatrix
+			* lightViewMatrix;
 
 	//Set up texture coordinate generation.
 	glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
-	glTexGenfv(GL_S, GL_EYE_PLANE, textureMatrix.GetRow(0));
+	glTexGenfv(GL_S, GL_EYE_PLANE, (float*) &textureMatrix.GetRow(0));
 	glEnable(GL_TEXTURE_GEN_S);
 
 	glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
-	glTexGenfv(GL_T, GL_EYE_PLANE, textureMatrix.GetRow(1));
+	glTexGenfv(GL_T, GL_EYE_PLANE, (float*) &textureMatrix.GetRow(1));
 	glEnable(GL_TEXTURE_GEN_T);
 
 	glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
-	glTexGenfv(GL_R, GL_EYE_PLANE, textureMatrix.GetRow(2));
+	glTexGenfv(GL_R, GL_EYE_PLANE, (float*) &textureMatrix.GetRow(2));
 	glEnable(GL_TEXTURE_GEN_R);
 
 	glTexGeni(GL_Q, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
-	glTexGenfv(GL_Q, GL_EYE_PLANE, textureMatrix.GetRow(3));
+	glTexGenfv(GL_Q, GL_EYE_PLANE, (float*) &textureMatrix.GetRow(3));
 	glEnable(GL_TEXTURE_GEN_Q);
 
 	//Bind & enable shadow map texture
@@ -222,7 +286,8 @@ void Display(void)
 	glEnable(GL_TEXTURE_2D);
 
 	//Enable shadow comparison
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_COMPARE_R_TO_TEXTURE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB,
+			GL_COMPARE_R_TO_TEXTURE);
 
 	//Shadow comparison should be true (ie not in shadow) if r<=texture
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC_ARB, GL_LEQUAL);
@@ -233,8 +298,7 @@ void Display(void)
 	//Set alpha test to discard false comparisons
 	glAlphaFunc(GL_GEQUAL, 0.99f);
 	glEnable(GL_ALPHA_TEST);
-
-	DrawScene(angle);
+	DrawScene();
 
 	//Disable textures and texgen
 	glDisable(GL_TEXTURE_2D);
@@ -248,15 +312,6 @@ void Display(void)
 	glDisable(GL_LIGHTING);
 	glDisable(GL_ALPHA_TEST);
 
-
-
-	//Update frames per second counter
-	fpsCounter.Update();
-
-	//Print fps
-	static char fpsString[32];
-	sprintf(fpsString, "%.2f", fpsCounter.GetFps());
-	
 	//Set matrices for ortho
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
@@ -266,11 +321,6 @@ void Display(void)
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glLoadIdentity();
-
-	//Print text
-	glRasterPos2f(-1.0f, 0.9f);
-	for(unsigned int i=0; i<strlen(fpsString); ++i)
-		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, fpsString[i]);
 
 	//reset matrices
 	glMatrixMode(GL_PROJECTION);
@@ -284,47 +334,81 @@ void Display(void)
 }
 
 //Called on window resize
-void Reshape(int w, int h)
-{
+void Reshape(int w, int h) {
 	//Save new window size
-	windowWidth=w, windowHeight=h;
+	windowWidth = w, windowHeight = h;
 
 	//Update the camera's projection matrix
 	glPushMatrix();
 	glLoadIdentity();
-	gluPerspective(45.0f, (float)windowWidth/windowHeight, 1.0f, 100.0f);
+	gluPerspective(45.0f, (float) windowWidth / windowHeight, 1.0f, 100.0f);
 	glGetFloatv(GL_MODELVIEW_MATRIX, cameraProjectionMatrix);
 	glPopMatrix();
+
+	mausX = windowWidth / 2; // setze den maus X Wert in die mitte
+	mausY = windowHeight / 2; // setze den maus Y Wert in die mitte
 }
 
-//Called when a key is pressed
-void Keyboard(unsigned char key, int x, int y)
-{
-	//If escape is pressed, exit
-	if(key==27)
+void keyboard(unsigned char key, int x, int y) {
+	switch (key) {
+	case 27:
 		exit(0);
-
-	//Use P to pause the animation and U to unpause
-	if(key=='P' || key=='p')
-		timer.Pause();
-
-	if(key=='U' || key=='u')
-		timer.Unpause();
+		break;
+		//Bewegungs steuerung
+	case 'w':
+		keys[key] = true;
+		break;
+	case 's':
+		keys[key] = true;
+		break;
+	case 'a':
+		keys[key] = true;
+		break;
+	case 'd':
+		keys[key] = true;
+		break;
+	}
 }
 
-int main(int argc, char** argv)
-{
+void keyboardUp(unsigned char key, int x, int y) {
+	switch (key) {
+	case 'w':
+		keys[key] = false;
+		break;
+	case 's':
+		keys[key] = false;
+		break;
+	case 'a':
+		keys[key] = false;
+		break;
+	case 'd':
+		keys[key] = false;
+		break;
+	}
+}
+
+void mausMove(int x, int y) {
+	cameraRotateY += (mausX - x) * 0.2;
+	cameraRotateX += (mausY - y) * 0.2;
+	glutPostRedisplay();
+}
+
+int main(int argc, char** argv) {
+
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
 	glutInitWindowSize(640, 512);
-	glutCreateWindow("Shadow Mapping");
+	glutInitWindowPosition(300, 100);
+	glutCreateWindow(argv[0]);
 
-	if(!Init())
-		return 0;
+	Init();
 
-	glutDisplayFunc(Display);
+	glutDisplayFunc(display);
 	glutReshapeFunc(Reshape);
-	glutKeyboardFunc(Keyboard);
+	glutKeyboardFunc(keyboard);
+    glutKeyboardUpFunc(keyboardUp);
+    glutPassiveMotionFunc(mausMove);
+    glutIdleFunc(idle);
 	glutMainLoop();
 	return 0;
 }
