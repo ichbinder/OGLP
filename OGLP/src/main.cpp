@@ -18,6 +18,7 @@
 std::vector<ModelObject> mashe_VectorList;
 
 float rotateThing = 0;
+float lightRotateY = 0;
 
 float cameraTranslateX = 0;
 float cameraTranslateY = -3;
@@ -37,7 +38,7 @@ GLfloat rotateRobotfirstY = 0.0;
 
 //Camera & light positions
 VECTOR3D cameraPosition(-2.5f, 3.5f, -2.5f);
-VECTOR3D lightPosition(2.0f, 3.0f, -2.0f);
+VECTOR3D lightPosition(2.0f, 6.0f,-2.0f);
 
 //Size of shadow map
 const int shadowMapSize = 512;
@@ -80,6 +81,11 @@ void idle(void) {
 	if (rotateThing > 359)
 		rotateThing = 0.0f;
 	rotateThing += 0.2f;
+	if(lightRotateY > 359)
+		lightRotateY = 0.0f;
+	lightRotateY += 0.2f;
+	matrices_calc();
+	glutPostRedisplay();
 }
 
 //Called for initiation
@@ -146,13 +152,15 @@ bool Init(void) {
 	glGetFloatv(GL_MODELVIEW_MATRIX, cameraViewMatrix);
 
 	glLoadIdentity();
-	gluPerspective(45.0f, 1.0f, 2.0f, 50.0f);
+	gluPerspective(45.0f, 1.0f, 2.0f, 8.0f);
 	glGetFloatv(GL_MODELVIEW_MATRIX, lightProjectionMatrix);
 
 	glLoadIdentity();
 	gluLookAt(lightPosition.x, lightPosition.y, lightPosition.z,
 				0.0f, 0.0f,	0.0f,
 				0.0f, 1.0f, 0.0f);
+//	glTranslatef(2.0f, 6.0f,-2.0f);
+	glRotatef(lightRotateY, 0, 1, 0);
 	glGetFloatv(GL_MODELVIEW_MATRIX, lightViewMatrix);
 
 	glPopMatrix();
@@ -178,13 +186,15 @@ void matrices_calc() {
 	glGetFloatv(GL_MODELVIEW_MATRIX, cameraViewMatrix);
 
 	glLoadIdentity();
-	gluPerspective(45.0f, 1.0f, 2.0f, 50.0f);
+	gluPerspective(45.0f, 1.0f, 2.0f, 8.0f);
 	glGetFloatv(GL_MODELVIEW_MATRIX, lightProjectionMatrix);
 
 	glLoadIdentity();
 	gluLookAt(lightPosition.x, lightPosition.y, lightPosition.z,
 				0.0f, 0.0f, 0.0f,
 				0.0f, 1.0f, 0.0f);
+	//glTranslatef(2.0f, 6.0f,-2.0f);
+	glRotatef(lightRotateY, 0, 1, 0);
 	glGetFloatv(GL_MODELVIEW_MATRIX, lightViewMatrix);
 
 	glPopMatrix();
@@ -192,12 +202,12 @@ void matrices_calc() {
 
 void DrawScene(void)
 {
-    glPushMatrix();
-        glTranslatef(10.0, -0.5, 10.0);
-        for (int i = 0; i <= mashe_VectorList.size() - 1; i++) {
-            mashe_VectorList[i].DrawModel();
-        }
-    glPopMatrix();
+//    glPushMatrix();
+//        glTranslatef(10.0, -0.5, 10.0);
+//        for (int i = 0; i <= mashe_VectorList.size() - 1; i++) {
+//            mashe_VectorList[i].DrawModel();
+//        }
+//    glPopMatrix();
 
     glBegin(GL_QUADS);
     glColor3f(1.0, 0.4, 0.4);
@@ -208,96 +218,87 @@ void DrawScene(void)
     glEnd();
 	//Display lists for objects
     float angle = 5;
-	static GLuint spheresList=0, torusList=0, baseList=0;
+    static GLuint spheresList=0, torusList=0, baseList=0;
 
-	//Create spheres list if necessary
-	if(!spheresList)
-	{
-		spheresList=glGenLists(1);
-		glNewList(spheresList, GL_COMPILE);
-		{
-			glColor3f(0.0f, 1.0f, 0.0f);
-			glPushMatrix();
+    	//Create spheres list if necessary
+    	if(!spheresList)
+    	{
+    		spheresList=glGenLists(1);
+    		glNewList(spheresList, GL_COMPILE);
+    		{
+    			glColor3f(0.0f, 1.0f, 0.0f);
+    			glPushMatrix();
 
-			glTranslatef(0.45f, 1.0f, 0.45f);
-			glutSolidSphere(0.2, 24, 24);
+    			glTranslatef(0.45f, 1.0f, 0.45f);
+    			glutSolidSphere(0.2, 24, 24);
 
-			glTranslatef(-0.9f, 0.0f, 0.0f);
-			glutSolidSphere(0.2, 24, 24);
+    			glTranslatef(-0.9f, 0.0f, 0.0f);
+    			glutSolidSphere(0.2, 24, 24);
 
-			glTranslatef(0.0f, 0.0f,-0.9f);
-			glutSolidSphere(0.2, 24, 24);
+    			glTranslatef(0.0f, 0.0f,-0.9f);
+    			glutSolidSphere(0.2, 24, 24);
 
-			glTranslatef(0.9f, 0.0f, 0.0f);
-			glutSolidSphere(0.2, 24, 24);
+    			glTranslatef(0.9f, 0.0f, 0.0f);
+    			glutSolidSphere(0.2, 24, 24);
 
-			glPopMatrix();
-		}
-		glEndList();
-	}
+    			glPopMatrix();
+    		}
+    		glEndList();
+    	}
 
-	//Create torus if necessary
-	if(!torusList)
-	{
-		torusList=glGenLists(1);
-		glNewList(torusList, GL_COMPILE);
-		{
-			glColor3f(1.0f, 0.0f, 0.0f);
-			glPushMatrix();
+    	//Create torus if necessary
+    	if(!torusList)
+    	{
+    		torusList=glGenLists(1);
+    		glNewList(torusList, GL_COMPILE);
+    		{
+    			glColor3f(1.0f, 0.0f, 0.0f);
+    			glPushMatrix();
 
-			glTranslatef(0.0f, 0.5f, 0.0f);
-			glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
-			glutSolidTorus(0.2, 0.5, 24, 48);
+    			glTranslatef(0.0f, 0.5f, 0.0f);
+    			glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+    			glutSolidTorus(0.2, 0.5, 24, 48);
 
-			glPopMatrix();
+    			glPopMatrix();
+    		}
+    		glEndList();
+    	}
 
-			glPushMatrix();
-				glTranslatef(10.0f, 0.5f, 0.0f);
-				glutSolidCube(3);
-			glPopMatrix();
-		}
-		glEndList();
-	}
+    	//Create base if necessary
+    	if(!baseList)
+    	{
+    		baseList=glGenLists(1);
+    		glNewList(baseList, GL_COMPILE);
+    		{
+    			glColor3f(0.0f, 0.0f, 1.0f);
+    			glPushMatrix();
 
-//	//Create base if necessary
-//	if(!baseList)
-//	{
-//		baseList=glGenLists(1);
-//		glNewList(baseList, GL_COMPILE);
-//		{
-//			glColor3f(0.0f, 0.0f, 1.0f);
-//			glPushMatrix();
-//
-//			glScalef(1.0f, 0.05f, 1.0f);
-//			glutSolidCube(3.0f);
-//
-//			glPopMatrix();
-//		}
-//		glEndList();
-//	}
+    			glScalef(1.0f, 0.05f, 1.0f);
+    			glutSolidCube(3.0f);
+
+    			glPopMatrix();
+    		}
+    		glEndList();
+    	}
 
 
-	//Draw objects
-//	glCallList(baseList);
-	glCallList(torusList);
+    	//Draw objects
+    	glCallList(baseList);
+    	glCallList(torusList);
 
-	glPushMatrix();
-	glRotatef(angle, 0.0f, 1.0f, 0.0f);
-	glCallList(spheresList);
-	glPopMatrix();
+    	glPushMatrix();
+    	glRotatef(angle, 0.0f, 1.0f, 0.0f);
+    	glCallList(spheresList);
+    	glPopMatrix();
+
 }
 
 //Called to draw scene
 void display(void) {
 	glutWarpPointer(mausX, mausY); // setze die Maus in die mitte des Glutfensters
 
-	//	//angle of spheres in scene. Calculate from time
-	//float angle = 5; //timer.GetTime()/10;
-
 	//First pass - from light's point of view
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-//		glRotatef(rotateRobotfirstY, 0.0, 1.0, 0.0);
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadMatrixf((const float*) &lightProjectionMatrix);
@@ -396,6 +397,7 @@ void display(void) {
 	//Set alpha test to discard false comparisons
 	glAlphaFunc(GL_GEQUAL, 0.99f);
 	glEnable(GL_ALPHA_TEST);
+
 	DrawScene();
 
 	//Disable textures and texgen
@@ -501,7 +503,7 @@ int main(int argc, char** argv) {
 	glutCreateWindow(argv[0]);
 
 	Init();
-	load_obj("world.obj", mashe_VectorList);
+	load_obj("cube.obj", mashe_VectorList);
 	glutDisplayFunc(display);
 	glutReshapeFunc(Reshape);
 	glutKeyboardFunc(keyboard);
