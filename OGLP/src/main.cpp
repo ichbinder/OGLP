@@ -9,10 +9,19 @@
 #include "Maths/Maths.h"
 #include "main.h"
 #include "ModelObject.h"
+#include "paserOBJ.h"
+
+#include <IL/il.h>
+#include <IL/ilu.h>
+#include <IL/ilut.h>
 
 std::vector<ModelObject> mashe_VectorList;
 
 float rotateThing = 0;
+
+float cameraTranslateX = 0;
+float cameraTranslateY = -3;
+float cameraTranslateZ = 0;
 
 float cameraRotateY = 0;
 float cameraRotateX = 0;
@@ -45,23 +54,27 @@ MATRIX4X4 cameraProjectionMatrix, cameraViewMatrix;
 
 void idle(void) {
 	if (keys['w']) {
-		cameraPosition.z -= cos(cameraRotateY * fPi180) * 0.06;
-		cameraPosition.x -= sin(cameraRotateY * fPi180) * 0.06;
+		cameraTranslateZ -= cos(cameraRotateY * fPi180) * 0.06;
+		cameraTranslateX -= sin(cameraRotateY * fPi180) * 0.06;
+		matrices_calc();
 		glutPostRedisplay();
 	}
 	if (keys['s']) {
-		cameraPosition.z += cos(cameraRotateY * fPi180) * 0.06;
-		cameraPosition.x += sin(cameraRotateY * fPi180) * 0.06;
+		cameraTranslateZ += cos(cameraRotateY * fPi180) * 0.06;
+		cameraTranslateX += sin(cameraRotateY * fPi180) * 0.06;
+		matrices_calc();
 		glutPostRedisplay();
 	}
 	if (keys['a']) {
-		cameraPosition.x -= cos(cameraRotateY * fPi180) * 0.06;
-		cameraPosition.z += sin(cameraRotateY * fPi180) * 0.06;
+		cameraTranslateX -= cos(cameraRotateY * fPi180) * 0.06;
+		cameraTranslateZ += sin(cameraRotateY * fPi180) * 0.06;
+		matrices_calc();
 		glutPostRedisplay();
 	}
 	if (keys['d']) {
-		cameraPosition.x += cos(cameraRotateY * fPi180) * 0.06;
-		cameraPosition.z -= sin(cameraRotateY * fPi180) * 0.06;
+		cameraTranslateX += cos(cameraRotateY * fPi180) * 0.06;
+		cameraTranslateZ -= sin(cameraRotateY * fPi180) * 0.06;
+		matrices_calc();
 		glutPostRedisplay();
 	}
 	if (rotateThing > 359)
@@ -76,6 +89,10 @@ bool Init(void) {
 		printf("I require ARB_depth_texture and ARB_shadow extensionsn\n");
 		return false;
 	}
+
+    ilInit();
+    iluInit();
+    ilutInit();
 
 	//Load identity modelview
 	glMatrixMode(GL_MODELVIEW);
@@ -123,17 +140,19 @@ bool Init(void) {
 	glGetFloatv(GL_MODELVIEW_MATRIX, cameraProjectionMatrix);
 
 	glLoadIdentity();
-	gluLookAt(cameraPosition.x, cameraPosition.y, cameraPosition.z, 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f);
+	gluLookAt(cameraPosition.x, cameraPosition.y, cameraPosition.z,
+				cameraTranslateX, cameraTranslateY, cameraTranslateZ,
+				0.0f, 1.0f, 0.0f);
 	glGetFloatv(GL_MODELVIEW_MATRIX, cameraViewMatrix);
 
 	glLoadIdentity();
-	gluPerspective(45.0f, 1.0f, 2.0f, 8.0f);
+	gluPerspective(45.0f, 1.0f, 2.0f, 50.0f);
 	glGetFloatv(GL_MODELVIEW_MATRIX, lightProjectionMatrix);
 
 	glLoadIdentity();
-	gluLookAt(lightPosition.x, lightPosition.y, lightPosition.z, 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f);
+	gluLookAt(lightPosition.x, lightPosition.y, lightPosition.z,
+				0.0f, 0.0f,	0.0f,
+				0.0f, 1.0f, 0.0f);
 	glGetFloatv(GL_MODELVIEW_MATRIX, lightViewMatrix);
 
 	glPopMatrix();
@@ -150,18 +169,22 @@ void matrices_calc() {
 	glGetFloatv(GL_MODELVIEW_MATRIX, cameraProjectionMatrix);
 
 	glLoadIdentity();
-	gluLookAt(cameraPosition.x, cameraPosition.y, cameraPosition.z,
-				0.0f, 0.0f,	0.0f,
-				0.0f, 1.0f, 0.0f);
+//	gluLookAt(cameraPosition.x, cameraPosition.y, cameraPosition.z,
+//				0.0f, 0.0f, 0.0f,
+//				0.0f, 1.0f, 0.0f);
+	glRotated(360 - cameraRotateX, 1.0, 0.0, 0.0);
+	glRotated(360 - cameraRotateY, 0.0, 1.0, 0.0);
+	glTranslatef(-cameraTranslateX, cameraTranslateY, -cameraTranslateZ);
 	glGetFloatv(GL_MODELVIEW_MATRIX, cameraViewMatrix);
 
 	glLoadIdentity();
-	gluPerspective(45.0f, 1.0f, 2.0f, 8.0f);
+	gluPerspective(45.0f, 1.0f, 2.0f, 50.0f);
 	glGetFloatv(GL_MODELVIEW_MATRIX, lightProjectionMatrix);
 
 	glLoadIdentity();
-	gluLookAt(lightPosition.x, lightPosition.y, lightPosition.z, 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f);
+	gluLookAt(lightPosition.x, lightPosition.y, lightPosition.z,
+				0.0f, 0.0f, 0.0f,
+				0.0f, 1.0f, 0.0f);
 	glGetFloatv(GL_MODELVIEW_MATRIX, lightViewMatrix);
 
 	glPopMatrix();
@@ -183,6 +206,85 @@ void DrawScene(void)
     glVertex3f(100.0f, -1.0f, 100.0f);
     glVertex3f(100.0f, -1.0f, -100.0f);
     glEnd();
+	//Display lists for objects
+    float angle = 5;
+	static GLuint spheresList=0, torusList=0, baseList=0;
+
+	//Create spheres list if necessary
+	if(!spheresList)
+	{
+		spheresList=glGenLists(1);
+		glNewList(spheresList, GL_COMPILE);
+		{
+			glColor3f(0.0f, 1.0f, 0.0f);
+			glPushMatrix();
+
+			glTranslatef(0.45f, 1.0f, 0.45f);
+			glutSolidSphere(0.2, 24, 24);
+
+			glTranslatef(-0.9f, 0.0f, 0.0f);
+			glutSolidSphere(0.2, 24, 24);
+
+			glTranslatef(0.0f, 0.0f,-0.9f);
+			glutSolidSphere(0.2, 24, 24);
+
+			glTranslatef(0.9f, 0.0f, 0.0f);
+			glutSolidSphere(0.2, 24, 24);
+
+			glPopMatrix();
+		}
+		glEndList();
+	}
+
+	//Create torus if necessary
+	if(!torusList)
+	{
+		torusList=glGenLists(1);
+		glNewList(torusList, GL_COMPILE);
+		{
+			glColor3f(1.0f, 0.0f, 0.0f);
+			glPushMatrix();
+
+			glTranslatef(0.0f, 0.5f, 0.0f);
+			glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+			glutSolidTorus(0.2, 0.5, 24, 48);
+
+			glPopMatrix();
+
+			glPushMatrix();
+				glTranslatef(10.0f, 0.5f, 0.0f);
+				glutSolidCube(3);
+			glPopMatrix();
+		}
+		glEndList();
+	}
+
+//	//Create base if necessary
+//	if(!baseList)
+//	{
+//		baseList=glGenLists(1);
+//		glNewList(baseList, GL_COMPILE);
+//		{
+//			glColor3f(0.0f, 0.0f, 1.0f);
+//			glPushMatrix();
+//
+//			glScalef(1.0f, 0.05f, 1.0f);
+//			glutSolidCube(3.0f);
+//
+//			glPopMatrix();
+//		}
+//		glEndList();
+//	}
+
+
+	//Draw objects
+//	glCallList(baseList);
+	glCallList(torusList);
+
+	glPushMatrix();
+	glRotatef(angle, 0.0f, 1.0f, 0.0f);
+	glCallList(spheresList);
+	glPopMatrix();
 }
 
 //Called to draw scene
@@ -237,8 +339,6 @@ void display(void) {
 
 	glViewport(0, 0, windowWidth, windowHeight);
 
-//		glRotatef(rotateRobotfirstY, 0.0, 1.0, 0.0);
-
 	//Use dim light to represent shadowed areas
 	glLightfv(GL_LIGHT1, GL_POSITION, (float*) &VECTOR4D(lightPosition));
 	glLightfv(GL_LIGHT1, GL_AMBIENT, (float*) &(white * 0.2f));
@@ -248,8 +348,6 @@ void display(void) {
 	glEnable(GL_LIGHTING);
 
 	DrawScene();
-
-//		glRotatef(rotateRobotfirstY, 0.0, 1.0, 0.0);
 
 	//3rd pass
 	//Draw with bright light
@@ -390,6 +488,7 @@ void keyboardUp(unsigned char key, int x, int y) {
 void mausMove(int x, int y) {
 	cameraRotateY += (mausX - x) * 0.2;
 	cameraRotateX += (mausY - y) * 0.2;
+	matrices_calc();
 	glutPostRedisplay();
 }
 
@@ -402,7 +501,7 @@ int main(int argc, char** argv) {
 	glutCreateWindow(argv[0]);
 
 	Init();
-
+	load_obj("world.obj", mashe_VectorList);
 	glutDisplayFunc(display);
 	glutReshapeFunc(Reshape);
 	glutKeyboardFunc(keyboard);

@@ -15,6 +15,8 @@
 //Called for initiation
 bool Init(void);
 
+void matrices_calc();
+
 //Called to draw scene
 void display(void);
 
