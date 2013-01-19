@@ -5,6 +5,7 @@
 #include <GL/glu.h>
 #include <GL/glut.h>
 #include <stdio.h>
+#include <>
 #include "GLee/GLee.h"	//GL header file, including extensions
 #include "Maths/Maths.h"
 #include "main.h"
@@ -38,10 +39,12 @@ GLfloat rotateRobotfirstY = 0.0;
 
 //Camera & light positions
 VECTOR3D cameraPosition(-2.5f, 3.5f, -2.5f);
-VECTOR3D lightPosition(2.0f, 6.0f,-2.0f);
+VECTOR3D lightPosition(3.0f, 8.0f,-3.0f);
+
+
 
 //Size of shadow map
-const int shadowMapSize = 512;
+const int shadowMapSize = 768;
 
 //Textures
 GLuint shadowMapTexture;
@@ -83,7 +86,7 @@ void idle(void) {
 	rotateThing += 0.2f;
 	if(lightRotateY > 359)
 		lightRotateY = 0.0f;
-	lightRotateY += 0.2f;
+	lightRotateY += 0.8f;
 	matrices_calc();
 	glutPostRedisplay();
 }
@@ -146,13 +149,16 @@ bool Init(void) {
 	glGetFloatv(GL_MODELVIEW_MATRIX, cameraProjectionMatrix);
 
 	glLoadIdentity();
-	gluLookAt(cameraPosition.x, cameraPosition.y, cameraPosition.z,
-				cameraTranslateX, cameraTranslateY, cameraTranslateZ,
-				0.0f, 1.0f, 0.0f);
+//	gluLookAt(cameraPosition.x, cameraPosition.y, cameraPosition.z,
+//				0.0f, 0.0f, 0.0f,
+//				0.0f, 1.0f, 0.0f);
+	glRotated(360 - cameraRotateX, 1.0, 0.0, 0.0);
+	glRotated(360 - cameraRotateY, 0.0, 1.0, 0.0);
+	glTranslatef(-cameraTranslateX, cameraTranslateY, -cameraTranslateZ);
 	glGetFloatv(GL_MODELVIEW_MATRIX, cameraViewMatrix);
 
 	glLoadIdentity();
-	gluPerspective(45.0f, 1.0f, 2.0f, 8.0f);
+	gluPerspective(45.0f, 1.0f, 2.0f, 50.0f);
 	glGetFloatv(GL_MODELVIEW_MATRIX, lightProjectionMatrix);
 
 	glLoadIdentity();
@@ -177,23 +183,19 @@ void matrices_calc() {
 	glGetFloatv(GL_MODELVIEW_MATRIX, cameraProjectionMatrix);
 
 	glLoadIdentity();
-//	gluLookAt(cameraPosition.x, cameraPosition.y, cameraPosition.z,
-//				0.0f, 0.0f, 0.0f,
-//				0.0f, 1.0f, 0.0f);
 	glRotated(360 - cameraRotateX, 1.0, 0.0, 0.0);
 	glRotated(360 - cameraRotateY, 0.0, 1.0, 0.0);
 	glTranslatef(-cameraTranslateX, cameraTranslateY, -cameraTranslateZ);
 	glGetFloatv(GL_MODELVIEW_MATRIX, cameraViewMatrix);
 
 	glLoadIdentity();
-	gluPerspective(45.0f, 1.0f, 2.0f, 8.0f);
+	gluPerspective(45.0f, 1.0f, 2.0f, 50.0f);
 	glGetFloatv(GL_MODELVIEW_MATRIX, lightProjectionMatrix);
 
 	glLoadIdentity();
 	gluLookAt(lightPosition.x, lightPosition.y, lightPosition.z,
 				0.0f, 0.0f, 0.0f,
 				0.0f, 1.0f, 0.0f);
-	//glTranslatef(2.0f, 6.0f,-2.0f);
 	glRotatef(lightRotateY, 0, 1, 0);
 	glGetFloatv(GL_MODELVIEW_MATRIX, lightViewMatrix);
 
@@ -202,12 +204,12 @@ void matrices_calc() {
 
 void DrawScene(void)
 {
-//    glPushMatrix();
-//        glTranslatef(10.0, -0.5, 10.0);
-//        for (int i = 0; i <= mashe_VectorList.size() - 1; i++) {
-//            mashe_VectorList[i].DrawModel();
-//        }
-//    glPopMatrix();
+    glPushMatrix();
+//        glTranslatef(5.0, -0.5, 5.0);
+        for (int i = 0; i <= mashe_VectorList.size() - 1; i++) {
+            mashe_VectorList[i].DrawModel();
+        }
+    glPopMatrix();
 
     glBegin(GL_QUADS);
     glColor3f(1.0, 0.4, 0.4);
@@ -218,78 +220,79 @@ void DrawScene(void)
     glEnd();
 	//Display lists for objects
     float angle = 5;
-    static GLuint spheresList=0, torusList=0, baseList=0;
-
-    	//Create spheres list if necessary
-    	if(!spheresList)
-    	{
-    		spheresList=glGenLists(1);
-    		glNewList(spheresList, GL_COMPILE);
-    		{
-    			glColor3f(0.0f, 1.0f, 0.0f);
-    			glPushMatrix();
-
-    			glTranslatef(0.45f, 1.0f, 0.45f);
-    			glutSolidSphere(0.2, 24, 24);
-
-    			glTranslatef(-0.9f, 0.0f, 0.0f);
-    			glutSolidSphere(0.2, 24, 24);
-
-    			glTranslatef(0.0f, 0.0f,-0.9f);
-    			glutSolidSphere(0.2, 24, 24);
-
-    			glTranslatef(0.9f, 0.0f, 0.0f);
-    			glutSolidSphere(0.2, 24, 24);
-
-    			glPopMatrix();
-    		}
-    		glEndList();
-    	}
-
-    	//Create torus if necessary
-    	if(!torusList)
-    	{
-    		torusList=glGenLists(1);
-    		glNewList(torusList, GL_COMPILE);
-    		{
-    			glColor3f(1.0f, 0.0f, 0.0f);
-    			glPushMatrix();
-
-    			glTranslatef(0.0f, 0.5f, 0.0f);
-    			glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
-    			glutSolidTorus(0.2, 0.5, 24, 48);
-
-    			glPopMatrix();
-    		}
-    		glEndList();
-    	}
-
-    	//Create base if necessary
-    	if(!baseList)
-    	{
-    		baseList=glGenLists(1);
-    		glNewList(baseList, GL_COMPILE);
-    		{
-    			glColor3f(0.0f, 0.0f, 1.0f);
-    			glPushMatrix();
-
-    			glScalef(1.0f, 0.05f, 1.0f);
-    			glutSolidCube(3.0f);
-
-    			glPopMatrix();
-    		}
-    		glEndList();
-    	}
-
-
-    	//Draw objects
-    	glCallList(baseList);
-    	glCallList(torusList);
-
-    	glPushMatrix();
-    	glRotatef(angle, 0.0f, 1.0f, 0.0f);
-    	glCallList(spheresList);
-    	glPopMatrix();
+//    static GLuint spheresList=0, torusList=0, baseList=0, towerList=0;
+//
+//    	//Create spheres list if necessary
+//    	if(!spheresList)
+//    	{
+//    		spheresList=glGenLists(1);
+//    		glNewList(spheresList, GL_COMPILE);
+//    		{
+//    			glColor3f(0.0f, 1.0f, 0.0f);
+//    			glPushMatrix();
+//
+//    			glTranslatef(0.45f, 1.0f, 0.45f);
+//    			glutSolidSphere(0.2, 24, 24);
+//
+//    			glTranslatef(-0.9f, 0.0f, 0.0f);
+//    			glutSolidSphere(0.2, 24, 24);
+//
+//    			glTranslatef(0.0f, 0.0f,-0.9f);
+//    			glutSolidSphere(0.2, 24, 24);
+//
+//    			glTranslatef(0.9f, 0.0f, 0.0f);
+//    			glutSolidSphere(0.2, 24, 24);
+//
+//    			glPopMatrix();
+//    		}
+//    		glEndList();
+//    	}
+//
+//    	//Create torus if necessary
+//    	if(!torusList)
+//    	{
+//    		torusList=glGenLists(1);
+//    		glNewList(torusList, GL_COMPILE);
+//    		{
+//    			glColor3f(1.0f, 0.0f, 0.0f);
+//    			glPushMatrix();
+//
+//    			glTranslatef(0.0f, 0.5f, 0.0f);
+//    			glRotatef(90.0f, 1.0f, 0.0f, 0.0f);
+//    			glutSolidTorus(0.2, 0.5, 24, 48);
+//
+//    			glPopMatrix();
+//    		}
+//    		glEndList();
+//    	}
+//
+//    	//Create base if necessary
+//    	if(!baseList)
+//    	{
+//    		baseList=glGenLists(1);
+//    		glNewList(baseList, GL_COMPILE);
+//    		{
+//    			glColor3f(0.0f, 0.0f, 1.0f);
+//    			glPushMatrix();
+//
+//    			glScalef(1.0f, 0.05f, 1.0f);
+//    			glutSolidCube(3.0f);
+//
+//    			glPopMatrix();
+//
+//    		}
+//    		glEndList();
+//    	}
+//
+//    	//Draw objects
+//    	glCallList(baseList);
+//    	glCallList(torusList);
+////    	glCallList(towerList);
+//
+//    	glPushMatrix();
+//    	glRotatef(angle, 0.0f, 1.0f, 0.0f);
+//    	glCallList(spheresList);
+//    	glPopMatrix();
 
 }
 
@@ -358,10 +361,11 @@ void display(void) {
 	//Calculate texture matrix for projection
 	//This matrix takes us from eye space to the light's clip space
 	//It is postmultiplied by the inverse of the current view matrix when specifying texgen
-	static MATRIX4X4 biasMatrix(0.5f, 0.0f, 0.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.0f,
-			0.0f, 0.0f, 0.5f, 0.0f, 0.5f, 0.5f, 0.5f, 1.0f);//bias from [-1, 1] to [0, 1]
-	MATRIX4X4 textureMatrix = biasMatrix * lightProjectionMatrix
-			* lightViewMatrix;
+	static MATRIX4X4 biasMatrix(0.5f, 0.0f, 0.0f, 0.0f,
+								0.0f, 0.5f,	0.0f, 0.0f,
+								0.0f, 0.0f, 0.5f, 0.0f,
+								0.5f, 0.5f, 0.5f, 1.0f);//bias from [-1, 1] to [0, 1]
+	MATRIX4X4 textureMatrix = biasMatrix * lightProjectionMatrix * lightViewMatrix;
 
 	//Set up texture coordinate generation.
 	glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
@@ -498,12 +502,12 @@ int main(int argc, char** argv) {
 
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
-	glutInitWindowSize(640, 512);
+	glutInitWindowSize(1024, 768);
 	glutInitWindowPosition(300, 100);
 	glutCreateWindow(argv[0]);
 
 	Init();
-	load_obj("cube.obj", mashe_VectorList);
+	load_obj("monkey2.obj", mashe_VectorList);
 	glutDisplayFunc(display);
 	glutReshapeFunc(Reshape);
 	glutKeyboardFunc(keyboard);

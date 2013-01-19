@@ -26,8 +26,8 @@ ModelObject::ModelObject(std::vector<glm::vec3> vertices, std::vector<glm::vec3>
 }
 
 void ModelObject::DrawModel() {
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, textureID);               // Select Our Texture
+//    glEnable(GL_TEXTURE_2D);
+//    glBindTexture(GL_TEXTURE_2D, textureID);               // Select Our Texture
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -38,7 +38,7 @@ void ModelObject::DrawModel() {
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_NORMAL_ARRAY);
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-    glDisable(GL_TEXTURE_2D);
+//    glDisable(GL_TEXTURE_2D);
 }
 
 void ModelObject::DrawModel_whithOut_tex() {
