@@ -28,6 +28,13 @@ float lightAngle = 3.0f;
 //light rotation on/off
 bool lightRotateOff = true;
 
+
+
+
+//Camera & light positions
+//VECTOR3D cameraPosition(-2.5f, 3.5f, -2.5f);
+VECTOR3D lightPosition(lightAngle, 12.0f,-lightAngle);
+
 //Motion control
 float cameraTranslateX = 0.0f;
 float cameraTranslateY = -3.0f;
@@ -45,10 +52,6 @@ float fPi180 = 0.0174532925f;
 
 //Stores the key that was pressed. This is important in order to get out the delay.
 bool keys[256];
-
-//Camera & light positions
-//VECTOR3D cameraPosition(-2.5f, 3.5f, -2.5f);
-VECTOR3D lightPosition(lightAngle, 8.0f,-lightAngle);
 
 //Size of shadow map
 const int shadowMapSize = 768;
@@ -222,14 +225,16 @@ void DrawScene(void)
     switch(nextMash){
     		case 0:
     	        for (int i = 0; i <= mashe_VectorList.size() - 1; i++)
-    	            mashe_VectorList[i].DrawModel();
+    	            mashe_VectorList[i].DrawModel_withOut_tex();
     			break;
     		case 1:
     			glutSolidTeapot(1);
     			break;
     		case 2:
-    			nextMash = 0;
+    	        for (int i = 0; i <= mashe_VectorList.size() - 1; i++)
+    	            mashe_VectorList[i].DrawModel_withOut_tex();
     			break;
+
     		}
     glPopMatrix();
 
@@ -426,13 +431,13 @@ void keyboard(unsigned char key, int x, int y) {
 		//Light rotation angle
 	case ',':
 		lightAngle += 1.0f;
-		lightPosition.x = lightAngle; lightPosition.x = 8.0f; lightPosition.x = -lightAngle;
+		lightPosition.x = lightAngle; lightPosition.x = -lightAngle;
 		matrices_calc();
 		glutPostRedisplay();
 		break;
 	case '.':
 		lightAngle -= 1.0f;
-		lightPosition.x = lightAngle; lightPosition.x = 8.0f; lightPosition.x = -lightAngle;
+		lightPosition.x = lightAngle; lightPosition.x = -lightAngle;
 		matrices_calc();
 		glutPostRedisplay();
 		break;
@@ -444,6 +449,24 @@ void keyboard(unsigned char key, int x, int y) {
 		break;
 	case 'q':
 		nextMash += 1;
+	    switch(nextMash){
+	    		case 0:
+	    			mashe_VectorList.clear();
+	    			load_obj("monkey2.obj", mashe_VectorList);
+	    			break;
+	    		case 1:
+	    			//glutSolidTeapot(1);
+	    			break;
+	    		case 2:
+	    			mashe_VectorList.clear();
+	    			load_obj("sto.obj", mashe_VectorList);
+	    			break;
+	    		case 3:
+	    			mashe_VectorList.clear();
+	    			load_obj("monkey2.obj", mashe_VectorList);
+	    			nextMash = 0;
+	    			break;
+	    		}
 		break;
 
 	}

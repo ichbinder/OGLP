@@ -20,7 +20,7 @@ public:
     ModelObject(std::vector<glm::vec3> vertices, std::vector<glm::vec3> normals, std::vector<glm::vec2> texCorUV, std::vector<GLushort> elements, char* texImg_filePath);
     virtual ~ModelObject();
     void DrawModel();
-    void DrawModel_whithOut_tex();
+    void DrawModel_withOut_tex();
 private:
     std::vector<glm::vec3>      vertices;
     std::vector<glm::vec3>      normals;

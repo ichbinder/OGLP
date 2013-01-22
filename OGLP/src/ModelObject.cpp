@@ -25,9 +25,10 @@ ModelObject::ModelObject(std::vector<glm::vec3> vertices, std::vector<glm::vec3>
     this->textureID =           loadImageTex(this->texImg_filePath);
 }
 
+// Draw Model with texture
 void ModelObject::DrawModel() {
-//    glEnable(GL_TEXTURE_2D);
-//    glBindTexture(GL_TEXTURE_2D, textureID);               // Select Our Texture
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, textureID);               // Select Our Texture
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -38,14 +39,18 @@ void ModelObject::DrawModel() {
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_NORMAL_ARRAY);
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-//    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_TEXTURE_2D);
 }
 
-void ModelObject::DrawModel_whithOut_tex() {
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+// Draw Model withOut texture
+void ModelObject::DrawModel_withOut_tex() {
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
     glNormalPointer(GL_FLOAT, 0, &(normals[0]));
+    glVertexPointer(3, GL_FLOAT, 0, &(vertices[0]));
     glDrawElements(GL_TRIANGLES, elements.size(), GL_UNSIGNED_SHORT, &elements[0]);
     glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
 }
 
 // Function load a image, turn it into a texture, and return the texture ID as a GLuint for use
