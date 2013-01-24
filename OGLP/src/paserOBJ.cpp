@@ -121,7 +121,7 @@ int load_obj(const char* filename, vector<ModelObject>& mashe_VectorList) {
     }
 }
 
-
+//
 int load_mtl(const char* mtl_filename, string mtl_Name, char* img_filename) {
     ifstream mtlFileStream(mtl_filename);
     if (mtlFileStream.fail()) {
