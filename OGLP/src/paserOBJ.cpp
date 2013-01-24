@@ -15,6 +15,8 @@ int load_obj(const char* filename, vector<ModelObject>& mashe_VectorList) {
     std::vector<glm::vec3>      temp_normals;
     char*                       texImg_Filename = new char[255];
     char*                       mtl_filename = new char[255];
+
+    //Seeking the mtl file in the obj file
     while (!objFileStream.eof()) {
         getline(objFileStream, dataString);
         if (dataString.substr(0, 7) == "mtllib ") {
@@ -24,10 +26,16 @@ int load_obj(const char* filename, vector<ModelObject>& mashe_VectorList) {
             break;
         }
     }
+
+    //reset the stringstream
     objFileStream.clear();
     objFileStream.seekg(0, ios::beg);
+
+    //pass the obj file
     bool whileOut = 0;
     while (!objFileStream.eof() || whileOut) {
+
+    	//looking for a mesh object in obj file
         getline(objFileStream, dataString);
         if (dataString.substr(0, 2) == "o ") {
             while (!objFileStream.eof()) {
@@ -38,23 +46,38 @@ int load_obj(const char* filename, vector<ModelObject>& mashe_VectorList) {
                 else if (objFileStream.eof()) {
                     break;
                     whileOut = 1;
-                } else if (dataString.substr(0, 2) == "v ") {
+                }
+
+                //looking for a vertex
+                else if (dataString.substr(0, 2) == "v ") {
                     istringstream s(dataString.substr(2));
                     vec3 v; s >> v.x; s >> v.y; s >> v.z;
                     temp_vertices.push_back(v);
-                } else if (dataString.substr(0, 3) == "vt ") {
+                }
+
+                //looking for a texture
+                else if (dataString.substr(0, 3) == "vt ") {
                     istringstream s(dataString.substr(2));
                     vec2 vt; s >> vt.x; s >> vt.y;
                     temp_uvs.push_back(vt);
-                } else if (dataString.substr(0, 3) == "vn ") {
+                }
+
+                //looking for a normal
+                else if (dataString.substr(0, 3) == "vn ") {
                     istringstream r(dataString.substr(3));
                     vec3 vn; r >> vn.x; r >> vn.y; r >> vn.z;
                     temp_normals.push_back(vn);
-                } else if (dataString.substr(0, 7) == "usemtl ") {
+                }
+
+                //looking for a texture in mtl file (jpg, png, ...)
+                else if (dataString.substr(0, 7) == "usemtl ") {
                     istringstream usemtl(dataString.substr(7));
                     string mtlName; usemtl >> mtlName;
                     load_mtl(mtl_filename, mtlName, texImg_Filename);
-                } else if (dataString.substr(0, 2) == "f ") {
+                }
+
+                //looking for Elements
+                else if (dataString.substr(0, 2) == "f ") {
                     unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
                     sscanf(dataString.substr(2).c_str(), "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]); 
                     for (int i = 0; i < 3; i++) {
@@ -64,6 +87,8 @@ int load_obj(const char* filename, vector<ModelObject>& mashe_VectorList) {
                     }
                 }    
             }
+
+            //redesign Elements
             std::vector<glm::vec3>      in_vertices;
             std::vector<glm::vec2>      in_uvmap;
             std::vector<glm::vec3>      in_normals;   
@@ -86,7 +111,9 @@ int load_obj(const char* filename, vector<ModelObject>& mashe_VectorList) {
                     in_uvmap     .push_back(uv);
                     in_normals .push_back(normal);
             }
+            //redesign Elements old to opengl standard
             indexVBO(in_vertices, in_uvmap, in_normals, out_elements, out_vertices, out_uvmap, out_normals);
+            //create a new mash object
             ModelObject newObjekt(out_vertices, out_normals, out_uvmap, out_elements, texImg_Filename);
             mashe_VectorList.push_back(newObjekt);
             objFileStream.seekg(-(dataString.length() + 1), ios::cur);
@@ -94,6 +121,7 @@ int load_obj(const char* filename, vector<ModelObject>& mashe_VectorList) {
     }
 }
 
+//
 int load_mtl(const char* mtl_filename, string mtl_Name, char* img_filename) {
     ifstream mtlFileStream(mtl_filename);
     if (mtlFileStream.fail()) {

@@ -3,7 +3,7 @@
 
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include <GL/glut.h>
+#include "GL/glut.h"
 #include <stdio.h>
 #include "GLee/GLee.h"	//GL header file, including extensions
 #include "Maths/Maths.h"
@@ -23,10 +23,17 @@ int nextMash = 0;
 
 //light rotating angle around the y ache
 float lightRotateY = 0;
-//set the light angle to the scene
+//default light angle of incidence of the light
 float lightAngle = 3.0f;
 //light rotation on/off
 bool lightRotateOff = true;
+
+
+
+
+//Camera & light positions
+//VECTOR3D cameraPosition(-2.5f, 3.5f, -2.5f);
+VECTOR3D lightPosition(lightAngle, 12.0f,-lightAngle);
 
 //Motion control
 float cameraTranslateX = 0.0f;
@@ -46,12 +53,9 @@ float fPi180 = 0.0174532925f;
 //Stores the key that was pressed. This is important in order to get out the delay.
 bool keys[256];
 
-//Camera & light positions
-//VECTOR3D cameraPosition(-2.5f, 3.5f, -2.5f);
-VECTOR3D lightPosition(lightAngle, 8.0f,-lightAngle);
-
 //Size of shadow map
-const int shadowMapSize = 768;
+const int shadowMapSizew = 1024;
+const int shadowMapSizeh = 768;
 
 //Textures
 GLuint shadowMapTexture;
@@ -139,8 +143,8 @@ bool Init(void) {
 	//Create the shadow map texture
 	glGenTextures(1, &shadowMapTexture);
 	glBindTexture(GL_TEXTURE_2D, shadowMapTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadowMapSize,
-			shadowMapSize, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadowMapSizew,
+			shadowMapSizeh, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -154,32 +158,7 @@ bool Init(void) {
 	glMaterialfv(GL_FRONT, GL_SPECULAR, (GLfloat*) &white);
 	glMaterialf(GL_FRONT, GL_SHININESS, 16.0f);
 
-	//Calculate & save matrices
-	glPushMatrix();
-	//Calc the camera matrices
-	glLoadIdentity();
-	gluPerspective(45.0f, (float) windowWidth / windowHeight, 1.0f, 100.0f);
-	glGetFloatv(GL_MODELVIEW_MATRIX, cameraProjectionMatrix);
-
-	glLoadIdentity();
-	glRotated(360 - cameraRotateX, 1.0, 0.0, 0.0);
-	glRotated(360 - cameraRotateY, 0.0, 1.0, 0.0);
-	glTranslatef(-cameraTranslateX, cameraTranslateY, -cameraTranslateZ);
-	glGetFloatv(GL_MODELVIEW_MATRIX, cameraViewMatrix);
-
-	//Calc the light matrices
-	glLoadIdentity();
-	gluPerspective(45.0f, 1.0f, 2.0f, 50.0f);
-	glGetFloatv(GL_MODELVIEW_MATRIX, lightProjectionMatrix);
-
-	glLoadIdentity();
-	gluLookAt(lightPosition.x, lightPosition.y, lightPosition.z,
-				0.0f, 0.0f,	0.0f,
-				0.0f, 1.0f, 0.0f);
-	glRotatef(lightRotateY, 0, 1, 0);
-	glGetFloatv(GL_MODELVIEW_MATRIX, lightViewMatrix);
-
-	glPopMatrix();
+	matrices_calc();
 
 	return true;
 }
@@ -187,22 +166,24 @@ bool Init(void) {
 //Calculate & save matrices
 void matrices_calc() {
 	glPushMatrix();
-	//Calc the camera matrices
+	//Calc the Projection Matrix from the point of view the camera
 	glLoadIdentity();
 	gluPerspective(45.0f, (float) windowWidth / windowHeight, 1.0f, 100.0f);
 	glGetFloatv(GL_MODELVIEW_MATRIX, cameraProjectionMatrix);
 
+	//Calc the View Matrix from the field of vision the camera
 	glLoadIdentity();
 	glRotated(360 - cameraRotateX, 1.0, 0.0, 0.0);
 	glRotated(360 - cameraRotateY, 0.0, 1.0, 0.0);
 	glTranslatef(-cameraTranslateX, cameraTranslateY, -cameraTranslateZ);
 	glGetFloatv(GL_MODELVIEW_MATRIX, cameraViewMatrix);
 
-	//Calc the light matrices
+	///Calc the Projection Matrix from the point of view the light
 	glLoadIdentity();
 	gluPerspective(45.0f, 1.0f, 2.0f, 50.0f);
 	glGetFloatv(GL_MODELVIEW_MATRIX, lightProjectionMatrix);
 
+	//Calc the View Matrix from the field of vision the light
 	glLoadIdentity();
 	gluLookAt(lightPosition.x, lightPosition.y, lightPosition.z,
 				0.0f, 0.0f, 0.0f,
@@ -221,15 +202,24 @@ void DrawScene(void)
     glColor3f(0.4, 0.4, 0.4);
     switch(nextMash){
     		case 0:
+    			//parsed obj-file and show the monkey  without textures
     	        for (int i = 0; i <= mashe_VectorList.size() - 1; i++)
-    	            mashe_VectorList[i].DrawModel();
+    	            mashe_VectorList[i].DrawModel_withOut_tex();
     			break;
     		case 1:
+    			glDisable(GL_CULL_FACE);
     			glutSolidTeapot(1);
+    	        glEnable(GL_CULL_FACE);
     			break;
     		case 2:
-    			nextMash = 0;
+    			//parsed obj-file and show the stonehenge  without textures
+    			glDisable(GL_CULL_FACE);
+    			glColor3f(0.9, 0.0, 0.0);
+    	        for (int i = 0; i <= mashe_VectorList.size() - 1; i++)
+    	            mashe_VectorList[i].DrawModel_withOut_tex();
+    	        glEnable(GL_CULL_FACE);
     			break;
+
     		}
     glPopMatrix();
 
@@ -257,7 +247,7 @@ void display(void) {
 	glLoadMatrixf((const float*) &lightViewMatrix);
 
 	//Use viewport the same size as the shadow map
-	glViewport(0, 0, shadowMapSize, shadowMapSize);
+	glViewport(0, 0, shadowMapSizew, shadowMapSizeh);
 
 	//Draw back faces into the shadow map
 	glCullFace(GL_FRONT);
@@ -270,9 +260,10 @@ void display(void) {
 	DrawScene();
 
 	//Read the depth buffer into the shadow map texture
+//	glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadowMapSize, shadowMapSize, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, 0);
 	glBindTexture(GL_TEXTURE_2D, shadowMapTexture);
-	glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, shadowMapSize,
-			shadowMapSize);
+	glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, shadowMapSizew,
+			shadowMapSizeh);
 
 	//restore states
 	glCullFace(GL_BACK);
@@ -360,6 +351,14 @@ void display(void) {
 	glDisable(GL_TEXTURE_GEN_R);
 	glDisable(GL_TEXTURE_GEN_Q);
 
+	//parsed obj-file and show the object  with textures
+	glDisable(GL_CULL_FACE);
+	glTranslated(20.0f, 0.0f, 0.0f);
+	glColor3f(1.0, 1.0, 1.0);
+    for (int i = 0; i <= mashe_VectorList.size() - 1; i++)
+        mashe_VectorList[i].DrawModel();
+    glEnable(GL_CULL_FACE);
+
 	//Restore other states
 	glDisable(GL_LIGHTING);
 	glDisable(GL_ALPHA_TEST);
@@ -426,13 +425,13 @@ void keyboard(unsigned char key, int x, int y) {
 		//Light rotation angle
 	case ',':
 		lightAngle += 1.0f;
-		lightPosition.x = lightAngle; lightPosition.x = 8.0f; lightPosition.x = -lightAngle;
+		lightPosition.x = lightAngle; lightPosition.x = -lightAngle;
 		matrices_calc();
 		glutPostRedisplay();
 		break;
 	case '.':
 		lightAngle -= 1.0f;
-		lightPosition.x = lightAngle; lightPosition.x = 8.0f; lightPosition.x = -lightAngle;
+		lightPosition.x = lightAngle; lightPosition.x = -lightAngle;
 		matrices_calc();
 		glutPostRedisplay();
 		break;
@@ -444,6 +443,24 @@ void keyboard(unsigned char key, int x, int y) {
 		break;
 	case 'q':
 		nextMash += 1;
+	    switch(nextMash){
+	    		case 0:
+	    			mashe_VectorList.clear();
+	    			load_obj("monkey2.obj", mashe_VectorList);
+	    			break;
+	    		case 1:
+	    			//glutSolidTeapot(1);
+	    			break;
+	    		case 2:
+	    			mashe_VectorList.clear();
+	    			load_obj("sto.obj", mashe_VectorList);
+	    			break;
+	    		case 3:
+	    			mashe_VectorList.clear();
+	    			load_obj("monkey2.obj", mashe_VectorList);
+	    			nextMash = 0;
+	    			break;
+	    		}
 		break;
 
 	}
