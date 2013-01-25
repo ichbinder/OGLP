@@ -1,19 +1,22 @@
+#include <stdio.h>
 #include <glm/glm.hpp>
 #include <vector>
+#include <math.h>
 
+#include "GLee/GLee.h"	//GL header file, including extensions
+#include <GL/glut.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include "GL/glut.h"
-#include <stdio.h>
-#include "GLee/GLee.h"	//GL header file, including extensions
+
 #include "Maths/Maths.h"
 #include "main.h"
 #include "ModelObject.h"
 #include "paserOBJ.h"
 
+#include <IL/ilut.h>
 #include <IL/il.h>
 #include <IL/ilu.h>
-#include <IL/ilut.h>
+
 
 //Stores the mash objects that was loaded with obj parser.
 std::vector<ModelObject> mashe_VectorList;
@@ -28,6 +31,7 @@ float lightAngle = 3.0f;
 //light rotation on/off
 bool lightRotateOff = true;
 
+double cameraRotateSpeet = 0.01;
 
 
 
@@ -54,7 +58,7 @@ float fPi180 = 0.0174532925f;
 bool keys[256];
 
 //Size of shadow map
-const int shadowMapSizew = 1024;
+const int shadowMapSizew = 768;
 const int shadowMapSizeh = 768;
 
 //Textures
@@ -71,29 +75,29 @@ void idle(void) {
 	//Calc the Motion control
 		//forward
 	if (keys['w']) {
-		cameraTranslateZ -= cos(cameraRotateY * fPi180) * 0.06;
-		cameraTranslateX -= sin(cameraRotateY * fPi180) * 0.06;
+		cameraTranslateZ -= cos(cameraRotateY * fPi180) * cameraRotateSpeet;
+		cameraTranslateX -= sin(cameraRotateY * fPi180) * cameraRotateSpeet;
 		matrices_calc();
 		glutPostRedisplay();
 	}
 		//backward
 	if (keys['s']) {
-		cameraTranslateZ += cos(cameraRotateY * fPi180) * 0.06;
-		cameraTranslateX += sin(cameraRotateY * fPi180) * 0.06;
+		cameraTranslateZ += cos(cameraRotateY * fPi180) * cameraRotateSpeet;
+		cameraTranslateX += sin(cameraRotateY * fPi180) * cameraRotateSpeet;
 		matrices_calc();
 		glutPostRedisplay();
 	}
 		//left
 	if (keys['a']) {
-		cameraTranslateX -= cos(cameraRotateY * fPi180) * 0.06;
-		cameraTranslateZ += sin(cameraRotateY * fPi180) * 0.06;
+		cameraTranslateX -= cos(cameraRotateY * fPi180) * cameraRotateSpeet;
+		cameraTranslateZ += sin(cameraRotateY * fPi180) * cameraRotateSpeet;
 		matrices_calc();
 		glutPostRedisplay();
 	}
 		//right
 	if (keys['d']) {
-		cameraTranslateX += cos(cameraRotateY * fPi180) * 0.06;
-		cameraTranslateZ -= sin(cameraRotateY * fPi180) * 0.06;
+		cameraTranslateX += cos(cameraRotateY * fPi180) * cameraRotateSpeet;
+		cameraTranslateZ -= sin(cameraRotateY * fPi180) * cameraRotateSpeet;
 		matrices_calc();
 		glutPostRedisplay();
 	}

@@ -9,12 +9,16 @@
 #include <vector>
 #include <iostream>
 #include <cstdlib>
-#include "glm/glm.hpp"
-#include "GL/glut.h"
+
+#include <glm/glm.hpp>
+#include <GL/glut.h>
 #include <GL/gl.h>
+#include <IL/ilut.h>
 #include <IL/il.h>
 #include <IL/ilu.h>
-#include <IL/ilut.h>
+
+#include "ModelObject.h"
+
 class ModelObject {
 public:
     ModelObject(std::vector<glm::vec3> vertices, std::vector<glm::vec3> normals, std::vector<glm::vec2> texCorUV, std::vector<GLushort> elements, char* texImg_filePath);

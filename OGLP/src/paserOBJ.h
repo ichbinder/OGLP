@@ -7,17 +7,19 @@
 
 #ifndef PASEROBJ_H
 #define	PASEROBJ_H
-#include <GL/glut.h>
-#include <glm/glm.hpp>
-#include <vector>
-#include <map>
+#include <string.h>
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <string.h>
+#include <vector>
+#include <map>
+#include <GL/glut.h>
+#include <glm/glm.hpp>
 #include "ModelObject.h"
+
 using namespace std;
 using namespace glm;
+
 int load_obj(const char* filename, vector<ModelObject>& mashe_VectorList);
 int load_mtl(const char* mtl_filename, string mtl_Name, char* img_filename);
 struct PackedVertex{
