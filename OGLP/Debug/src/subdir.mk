@@ -6,17 +6,20 @@
 CPP_SRCS += \
 ../src/ModelObject.cpp \
 ../src/main.cpp \
-../src/paserOBJ.cpp 
+../src/paserOBJ.cpp \
+../src/shadowmap.cpp 
 
 OBJS += \
 ./src/ModelObject.o \
 ./src/main.o \
-./src/paserOBJ.o 
+./src/paserOBJ.o \
+./src/shadowmap.o 
 
 CPP_DEPS += \
 ./src/ModelObject.d \
 ./src/main.d \
-./src/paserOBJ.d 
+./src/paserOBJ.d \
+./src/shadowmap.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
