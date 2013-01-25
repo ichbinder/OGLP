@@ -32,20 +32,23 @@ int load_obj(const char* filename, vector<ModelObject>& mashe_VectorList) {
     objFileStream.seekg(0, ios::beg);
 
     //pass the obj file
-    bool whileOut = 0;
-    while (!objFileStream.eof() || whileOut) {
-
+    bool whileOut = false;
+    while (whileOut || !objFileStream.eof()) {
+    	if(whileOut)
+    		break;
     	//looking for a mesh object in obj file
         getline(objFileStream, dataString);
         if (dataString.substr(0, 2) == "o ") {
             while (!objFileStream.eof()) {
+            	cout << "Test2" << endl;
                 getline(objFileStream, dataString);
                 if (dataString.substr(0, 2) == "o ") {
                     break;
                 }
                 else if (objFileStream.eof()) {
-                    break;
+                	cout << "Test1" << endl;
                     whileOut = 1;
+                    break;
                 }
 
                 //looking for a vertex
