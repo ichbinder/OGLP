@@ -256,6 +256,9 @@ void display(void) {
 	//Draw back faces into the shadow map
 	glCullFace(GL_FRONT);
 
+	glEnable(GL_POLYGON_OFFSET_EXT);
+	glPolygonOffset(1.5, 1);
+
 	//Disable color writes, and use flat shading for speed
 	glShadeModel(GL_FLAT);
 	glColorMask(0, 0, 0, 0);
@@ -264,7 +267,6 @@ void display(void) {
 	DrawScene();
 
 	//Read the depth buffer into the shadow map texture
-//	glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadowMapSize, shadowMapSize, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, 0);
 	glBindTexture(GL_TEXTURE_2D, shadowMapTexture);
 	glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, shadowMapSizew,
 			shadowMapSizeh);
